@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bookwalker精算大師 - 專業闇黑版</title>
+    <style>
+        :root {
+            --bg-color: #080808;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --main-accent: #00eaff;
+            --text-primary: #ffffff;
+            --text-secondary: #aaaaaa;
+            --bw-red: #ff5555;
+            --bw-red-bg: rgba(255, 85, 85, 0.15);
+            --radius-card: 20px;
+            --radius-input: 10px;
+            --space-m: 15px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 50% -30%, #1a1a1a 0%, var(--bg-color) 70%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.015'/%3E%3C/svg%3E");
+            padding: 40px var(--space-m) 30px var(--space-m);
+            margin: 0;
+            color: var(--text-primary);
+            min-height: 100vh;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app {
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(25px) saturate(150%);
+            -webkit-backdrop-filter: blur(25px) saturate(150%);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-card);
+            padding: 25px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            margin-bottom: 25px;
+        }
+        
+        h2 {
+            text-align: center;
+            color: var(--text-primary);
+            margin-bottom: 30px;
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .title-icon {
+            width: 24px;
+            height: 24px;
+            fill: var(--text-primary);
+        }
+
+        .mode-switch {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 4px;
+            border-radius: var(--radius-input);
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--main-accent);
+            font-weight: 700;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            font-weight: 600;
+            margin-left: 2px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03); 
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-input);
+            font-size: 16px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            color: var(--text-primary);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--main-accent);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 10px rgba(0,234,255,0.2);
+        }
+
+        select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+            padding-right: 35px;
+        }
+        
+        select option { background-color: #1a1a1a; color: white; padding: 12px; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #007AFF, #00c6ff);
+            color: white;
+            border: none;
+            border-radius: var(--radius-input);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 5px 15px rgba(0,114,255,0.3);
+        }
+
+        .bw-payment-box {
+            margin-top: 25px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            display: none;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+
+        .bw-header {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 12px 15px;
+            font-weight: 700;
+            font-size: 16px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .bw-row {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            padding: 10px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .bw-row span:last-child { text-align: right; color: var(--text-primary); font-weight: 600; }
+
+        .bw-row.total {
+            background: var(--bw-red-bg);
+            border-top: 1px solid rgba(255, 85, 85, 0.3);
+            font-weight: 700;
+        }
+        .bw-row.total span { color: var(--bw-red); }
+        .red-val { color: var(--bw-red); font-weight: 800; }
+
+        #rateCard {
+            text-align: center;
+            margin-top: 25px;
+            padding: 25px;
+            background: var(--card-bg);
+            backdrop-filter: blur(25px);
+            border-radius: var(--radius-card);
+            display: none;
+            border: 1px solid var(--card-border);
+        }
+
+        .rate-val-box {
+            font-size: 48px;
+            font-weight: 800;
+            color: var(--main-accent);
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="card">
+            <h2>
+                <svg class="title-icon" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><path d="M52 4c-4 0-8 2-12 6S28 20 28 20l-4-4s-8 2-12 6 6 10 6 10-2 4-2 8-2 12 6 16 16 6 20 2 4-4 6-8 2-12 4-16L52 4z"/><path d="M34 22s8 4 12 0M40 28s8 4 12 0M30 10s8 4 12 0M36 16s8 4 12 0"/><circle cx="42" cy="54" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M46 49l-8 10M37 50l10 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                BW 究極省錢大師
+            </h2>
+
+            <div class="mode-switch">
+                <div id="modeEst" class="mode-btn active" onclick="setMode('est')">預估模式</div>
+                <div id="modeRev" class="mode-btn" onclick="setMode('rev')">倍數反推</div>
+            </div>
+
+            <label>會員等級 (獎勵%)</label>
+            <select id="lv">
+                <option value="0" selected>LV.0 (0%)</option>
+                <option value="1">LV.1 (1%)</option>
+                <option value="2">LV.2 (2%)</option>
+                <option value="4">LV.3 (4%)</option>
+                <option value="5">LV.4 (5%)</option>
+                <option value="7">LV.5 (7%)</option>
+                <option value="9">LV.6 (9%)</option>
+                <option value="11">LV.7 (11%)</option>
+            </select>
+
+            <div class="form-grid">
+                <div>
+                    <label id="pLabel">原價總計</label>
+                    <input type="number" id="origPrice" placeholder="原價">
+                </div>
+                <div>
+                    <label id="sLabel">小計金額</label>
+                    <input type="number" id="subTotal" placeholder="必填">
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div>
+                    <label id="bonusLabel">活動贈點總額</label>
+                    <input type="number" id="bonusPt" placeholder="0">
+                </div>
+                <div>
+                    <label>滿額禮模式</label>
+                    <select id="giftMode">
+                        <option value="none">無</option>
+                        <option value="fixed">固定贈點</option>
+                        <option value="percent">%數回饋</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div>
+                    <label>模式數值</label>
+                    <input type="number" id="giftVal" placeholder="0">
+                </div>
+                <div>
+                    <label>折價券模式</label>
+                    <select id="couponMode">
+                        <option value="percent">折數 (%)</option>
+                        <option value="cash">折抵現金</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div>
+                    <label id="couponLabel">折價券 (%)</label>
+                    <input type="number" id="couponVal" placeholder="例如 85">
+                </div>
+                <div>
+                    <label>點數折抵</label>
+                    <input type="number" id="pointUsed" value="0">
+                </div>
+            </div>
+
+            <button id="calcBtn" onclick="calculate()">開始精算分析</button>
+        </div>
+
+        <div id="resultBox" class="bw-payment-box">
+            <div class="bw-header">精算分析結果</div>
+            <div class="bw-row"><span>實付金額</span><span id="resPay" class="red-val">0</span></div>
+            <div class="bw-row"><span>獲得點數總計</span><span id="resPt">0</span></div>
+        </div>
+
+        <div id="rateCard">
+            <div style="font-size: 13px; color: var(--text-secondary);">實際折數</div>
+            <div id="rateVal" class="rate-val-box">0.00 <small>折</small></div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'est';
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('modeEst').classList.toggle('active', mode === 'est');
+            document.getElementById('modeRev').classList.toggle('active', mode === 'rev');
+            
+            if (mode === 'rev') {
+                document.getElementById('bonusLabel').innerText = '目標點數';
+                document.getElementById('bonusPt').placeholder = '輸入要反推的點數';
+            } else {
+                document.getElementById('bonusLabel').innerText = '活動贈點總額';
+                document.getElementById('bonusPt').placeholder = '0';
+            }
+        }
+
+        function calculate() {
+            const sub = parseFloat(document.getElementById('subTotal').value) || 0;
+            const lvRate = parseFloat(document.getElementById('lv').value) / 100;
+            const points = parseFloat(document.getElementById('pointUsed').value) || 0;
+            
+            let pay = sub - points;
+            let basePt = Math.floor(sub * 0.01);
+            let memberPt = Math.floor(sub * lvRate);
+            let totalPt = basePt + memberPt;
+
+            document.getElementById('resPay').innerText = '$' + pay.toFixed(0);
+            document.getElementById('resPt').innerText = totalPt + ' 點';
+            
+            document.getElementById('resultBox').style.display = 'block';
+            document.getElementById('rateCard').style.display = 'block';
+            
+            const orig = parseFloat(document.getElementById('origPrice').value) || sub;
+            let rate = orig > 0 ? (pay / orig) * 10 : 0;
+            document.getElementById('rateVal').innerHTML = rate.toFixed(2) + ' <small>折</small>';
+        }
+    </script>
+</body>
+</html>
