@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bookwalker精算大師</title>
+    <style>
+        :root { --main: #007AFF; --card: #ffffff; --text: #1c1c1e; --bg: #f2f2f7; --bw-orange: #d93025; --bw-table-border: #f0e0c0; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); padding: 15px; margin: 0; color: var(--text); }
+        .app { max-width: 400px; margin: 0 auto; }
+        .card { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); margin-bottom: 15px; }
+        h2 { text-align: center; color: var(--main); margin-bottom: 20px; font-size: 20px; }
+        label { display: block; font-size: 13px; color: #8e8e93; margin-bottom: 4px; font-weight: 600; }
+        input, select { width: 100%; padding: 12px; border: 1.5px solid #e5e5ea; border-radius: 10px; font-size: 16px; margin-bottom: 10px; box-sizing: border-box; background: #fafafa; }
+        button { width: 100%; padding: 16px; background: var(--main); color: white; border: none; border-radius: 12px; font-size: 18px; font-weight: 700; cursor: pointer; margin-top: 5px; }
+        .bw-payment-box { margin-top: 20px; border: 1px solid var(--bw-table-border); display: none; background: white; border-radius: 8px; overflow: hidden; }
+        .bw-header { background: #fdf2d2; padding: 12px; font-weight: bold; font-size: 18px; border-bottom: 1px solid var(--bw-table-border); color: #333; }
+        .bw-row { display: grid; grid-template-columns: 1.2fr 1fr; padding: 12px; border-bottom: 1px solid #f9f0d7; font-size: 16px; }
+        .bw-row span:last-child { text-align: right; }
+        .bw-row.total { background: #fdf2d2; border-top: 2px solid #e0c0a0; font-weight: bold; }
+        .red-val { color: var(--bw-orange); font-weight: bold; font-size: 20px; }
+        .pt-table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+        .pt-table th { background: #666; color: #fff; padding: 8px; border: 1px solid #eee; }
+        .pt-table td { padding: 10px 8px; border: 1px solid #eee; text-align: center; }
+        #rateCard { text-align: center; margin-top: 15px; padding: 15px; background: #fff; border-radius: 12px; display: none; border: 1px solid #eee; }
+        .rate-val-box { font-size: 40px; font-weight: 900; color: #f39800; margin: 5px 0; }
+        .verdict { font-size: 16px; font-weight: bold; padding: 8px 16px; border-radius: 20px; display: inline-block; margin-top: 5px; color: white; transition: all 0.3s; }
+        .ignored { color: #999; text-decoration: line-through; background: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="card">
+            <h2>📚 Bookwalker精算大師 </h2>
+
+            <label>會員等級 (獎勵%)</label>
+            <select id="lv">
+                <option value="0" selected>LV.0 (0%)</option>
+                <option value="1">LV.1 (1%)</option>
+                <option value="2">LV.2 (2%)</option>
+                <option value="4">LV.3 (4%)</option>
+                <option value="5">LV.4 (5%)</option>
+                <option value="7">LV.5 (7%)</option>
+                <option value="9">LV.6 (9%)</option>
+                <option value="11">LV.7 (11%)</option>
+            </select>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div><label>原價總計</label><input type="number" id="p" placeholder="原價" inputmode="decimal"></div>
+                <div><label>小計金額</label><input type="number" id="sub" placeholder="必填" inputmode="decimal"></div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div id="ptsBox">
+                    <label id="ptsLabel">活動贈點總額</label>
+                    <input type="text" id="ptsX" placeholder="輸入要反推的點數">
+                </div>
+                <div>
+                    <label>滿額禮模式</label>
+                    <select id="giftType">
+                        <option value="none" selected>無</option>
+                        <option value="percent">再折 (%)</option>
+                        <option value="cash">折現 ($)</option>
+                        <option value="point">贈點 (pt)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div><label id="giftValLabel">模式數值</label><input type="number" id="giftVal" inputmode="decimal"></div>
+                <div>
+                    <label>折價券模式</label>
+                    <select id="cpType">
+                        <option value="percent" selected>折數 (%)</option>
+                        <option value="cash">折現 ($)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <div><label id="cpValLabel">折價券 (%)</label><input type="number" id="cpVal" inputmode="decimal"></div>
+                <div><label>點數折抵</label><input type="number" id="pointOff" value="0" inputmode="decimal"></div>
+            </div>
+
+            <button onclick="calc()">開始精算分析</button>
+
+            <div id="bwBox" class="bw-payment-box">
+                <div class="bw-header">支付明細</div>
+                <div id="payRows"></div>
+                <div class="bw-row total"><span>結帳金額：</span><span id="r_pay" class="red-val"></span></div>
+                
+                <table class="pt-table">
+                    <thead><tr><th>類別</th><th>計算過程</th><th>合計點數</th></tr></thead>
+                    <tbody id="pt_body"></tbody>
+                    <tfoot>
+                        <tr style="border-top: 2px solid #333; font-weight:bold;">
+                            <td colspan="2" style="text-align:right; padding-right:15px;">總計獲點</td>
+                            <td id="r_total_pt" style="color:var(--bw-orange);"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <div id="rateCard">
+                <div id="reverseInfo" style="display:none; color:var(--main); font-weight:bold; margin-bottom:10px;"></div>
+                <div style="font-size:14px; color:#8e8e93; font-weight:bold;">🔥 實質成本折數 🔥</div>
+                <div class="rate-val-box" id="rateDisplay"></div>
+                <div id="verdictBox" class="verdict"></div>
+                <div id="savingNote" style="font-size: 12px; color: #8e8e93; margin-top: 12px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function bwRound(num) { return Math.floor((num + 0.0000001) * 10) / 10; }
+
+        function calc() {
+            const p = parseFloat(document.getElementById('p').value) || 0;
+            const sub = parseFloat(document.getElementById('sub').value) || 0;
+            const lvRate = parseFloat(document.getElementById('lv').value) || 0;
+            const ptsInput = document.getElementById('ptsX').value;
+            const pointOff = parseFloat(document.getElementById('pointOff').value) || 0;
+            const giftType = document.getElementById('giftType').value;
+            const giftVal = parseFloat(document.getElementById('giftVal').value) || 0;
+            const cpType = document.getElementById('cpType').value;
+            const cpVal = parseFloat(document.getElementById('cpVal').value) || 0;
+
+            if (sub <= 0) return;
+
+            // 1. 先算折價券折抵
+            let cpOffAmt = 0;
+            let priceAfterCp = sub;
+            if (cpType === 'percent' && cpVal > 0) {
+                let rate = cpVal < 10 ? cpVal / 10 : cpVal / 100;
+                priceAfterCp = Math.round(sub * rate);
+                cpOffAmt = sub - priceAfterCp;
+            } else if (cpType === 'cash') {
+                cpOffAmt = cpVal;
+                priceAfterCp = Math.max(0, sub - cpOffAmt);
+            }
+
+            // 2. 扣除點數折抵
+            let priceAfterPts = Math.max(0, priceAfterCp - pointOff);
+
+            // 3. 套用滿額禮（以「折價券與點數扣除後」的金額計算）
+            let pay = priceAfterPts;
+            let extraOffAmt = 0;
+            let bonusPt = 0;
+
+            if (giftType === 'percent' && giftVal > 0) {
+                let rate = giftVal < 10 ? giftVal / 10 : giftVal / 100;
+                pay = Math.round(priceAfterPts * rate);
+                extraOffAmt = priceAfterPts - pay;
+            } else if (giftType === 'cash') {
+                extraOffAmt = Math.min(priceAfterPts, giftVal);
+                pay = Math.max(0, priceAfterPts - extraOffAmt);
+            } else if (giftType === 'point') {
+                bonusPt = giftVal;
+            }
+
+            // 4. 點數回饋計算（以最終支付金額 pay 為基準）
+            const rewardBase = pay; 
+
+            let activePtVal = parseFloat(ptsInput) || 0;
+            let calculatedX = (rewardBase > 0) ? (activePtVal / (rewardBase * 0.01)) : 0;
+            document.getElementById('reverseInfo').innerText = `🔍 精算倍數：約 ${calculatedX.toFixed(2)} 倍`;
+            document.getElementById('reverseInfo').style.display = 'block';
+
+            const pNormal = pay * 0.01;
+            const pLvAdd = rewardBase * (lvRate / 100);
+            
+            let isActIgnored = (calculatedX < lvRate);
+            let isLvIgnored = (calculatedX >= lvRate);
+            
+            const totalPt = bwRound(pNormal + (isActIgnored ? 0 : activePtVal) + (isLvIgnored ? 0 : pLvAdd) + bonusPt);
+
+            // 渲染 UI 順序同步調整為官方顯示順序
+            document.getElementById('payRows').innerHTML = `
+                <div class="bw-row"><span>購物合計金額：</span><span>${sub} 元</span></div>
+                ${cpOffAmt > 0 ? `<div class="bw-row"><span>折價券折抵：</span><span>-${cpOffAmt} 元</span></div>` : ''}
+                ${pointOff > 0 ? `<div class="bw-row"><span>點數折抵：</span><span>-${pointOff} 元</span></div>` : ''}
+                ${extraOffAmt > 0 ? `<div class="bw-row"><span>滿額禮折抵：</span><span>-${extraOffAmt} 元</span></div>` : ''}
+            `;
+            document.getElementById('r_pay').innerText = pay + " 元";
+
+            document.getElementById('pt_body').innerHTML = `
+                <tr><td>一般</td><td>${pay} × 1%</td><td>${pNormal.toFixed(2)}</td></tr>
+                <tr class="${isActIgnored ? 'ignored' : ''}"><td>活動</td><td>${rewardBase} × 1% × <b>${calculatedX.toFixed(1)}倍</b></td><td>${activePtVal.toFixed(2)}${isActIgnored ? '<br><small>(擇優略過)</small>' : ''}</td></tr>
+                <tr class="${isLvIgnored ? 'ignored' : ''}"><td>會員</td><td>${rewardBase} × ${lvRate}%</td><td>${pLvAdd.toFixed(2)}${isLvIgnored ? '<br><small>(擇優略過)</small>' : ''}</td></tr>
+                ${bonusPt > 0 ? `<tr><td>滿額贈點</td><td>活動贈送</td><td>${bonusPt}</td></tr>` : ''}
+            `;
+
+            const base = p > 0 ? p : sub;
+            const netPay = pay - totalPt;
+            const finalRate = (netPay / base * 10);
+
+            document.getElementById('r_total_pt').innerText = totalPt.toFixed(1) + " pt";
+            document.getElementById('rateDisplay').innerHTML = `<span>${finalRate.toFixed(2)}</span><small style="font-size:20px"> 折</small>`;
+
+            const vBox = document.getElementById('verdictBox');
+            if (finalRate <= 5.5) {
+                vBox.innerText = "🔥 究極划算 (大拜拜級)";
+                vBox.style.background = "#ff3d00";
+            } else if (finalRate <= 6.5) {
+                vBox.innerText = "✅ 真香推薦 (買到賺到)";
+                vBox.style.background = "#f39800";
+            } else if (finalRate <= 7.5) {
+                vBox.innerText = "👌 心理及格 (急用可買)";
+                vBox.style.background = "#4cd964";
+            } else if (finalRate <= 8.5) {
+                vBox.innerText = "🚫 觀望盤子 (再等看看)";
+                vBox.style.background = "#4a4a4a";
+            } else {
+                vBox.innerText = "💀 絕緣區 (先關網頁吧)";
+                vBox.style.background = "#000000";
+            }
+            
+            document.getElementById('bwBox').style.display = 'block';
+            document.getElementById('rateCard').style.display = 'block';
+            document.getElementById('savingNote').innerText = `最高獲點時實質支出約 ${Math.round(netPay)} 元 (原價 ${base} 元)`;
+        }
+
+        document.getElementById('giftType').addEventListener('change', function() {
+            const label = document.getElementById('giftValLabel');
+            if (this.value === 'percent') label.innerText = "再折 (%)";
+            else if (this.value === 'cash') label.innerText = "折抵金額 ($)";
+            else if (this.value === 'point') label.innerText = "贈送點數 (pt)";
+            else label.innerText = "模式數值";
+        });
+        document.getElementById('cpType').addEventListener('change', function() {
+            document.getElementById('cpValLabel').innerText = (this.value === 'percent') ? "折價券 (%)" : "折價券金額 ($)";
+        });
+    </script>
+</body>
+</html>
